@@ -71,7 +71,7 @@ while True:
 				future = executor.submit(sauce_info, values['-CODE-'])
 				return_value = future.result()
 
-				title, title_pretty, artist_name, artist_url, tags, upload_date, images = sauce_info(values['-CODE-'])
+				title, title_pretty, artist_name, artist_url, tags, upload_date, images = return_value
 				# print(title)
 				# print(title_pretty)
 				# print(upload_date)
@@ -92,7 +92,7 @@ while True:
 				window['-TX_TAGS-'].update(tags)
 
 				im = Image.open(requests.get(images[0], stream=True).raw)
-				im.thumbnail((700,700))
+				im.thumbnail((600,600))
 				bio = io.BytesIO()
 				im.save(bio, format="PNG")
 				window['-IMAGE-'].update(bio.getvalue())
