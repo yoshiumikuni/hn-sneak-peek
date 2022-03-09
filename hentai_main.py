@@ -104,7 +104,7 @@ while True:
 
 				# showing the first image of the manga
 				im = Image.open(requests.get(images_urls[0], stream=True).raw)
-				im.thumbnail((200,200))
+				im.thumbnail((500,500))
 				bio = io.BytesIO()
 				im.save(bio, format="PNG") # convert to PNG, somehow the element (image viewer element) not support JPG format
 				window['-IMAGE-'].update(bio.getvalue())
