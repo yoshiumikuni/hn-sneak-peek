@@ -74,7 +74,7 @@ layout_right = [
 layout = [[sg.Column(layout_left), sg.VSeparator(), sg.Column(layout_right, element_justification='c')]]
 
 # show window application
-window = sg.Window('NH Sneak Peek', layout, size=(958,559))
+window = sg.Window('NH Sneak Peek', layout, size=(958,530))
 
 # looping. Here the logic of the program run
 while True:
