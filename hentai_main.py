@@ -44,9 +44,9 @@ layout = [
 	[sg.Text('Uploaded : ', key='-TX_UPLOAD-')],
 	[sg.Text('Tags: ')],
 	[sg.Multiline(size=(55, 5), disabled=True, key='-TX_TAGS-')],
-	[sg.Text('2022 Copyright Yoshi~')]
 
 	# Image viewer
+	[sg.Column([[sg.Image(key="-IMAGE-")]], justification='center')]
 	# 2 button for navigate
 ]
 
@@ -86,14 +86,19 @@ while True:
 					window['-TX_TITLE-'].update('Title: {0}'.format(title_pretty))
 					window['-TX_TITLE-'].set_tooltip(title)
 
-
 				window['-TX_ARTIST-'].update('Artist: {0}'.format(artist_name))
 				window['-TX_UPLOAD-'].update('Uploaded: {0}'.format(upload_date))
 				tags = ', '.join(map(str, tags))
 				window['-TX_TAGS-'].update(tags)
+
+				im = Image.open(requests.get(images[0], stream=True).raw)
+				im.thumbnail((700,700))
+				bio = io.BytesIO()
+				im.save(bio, format="PNG")
+				window['-IMAGE-'].update(bio.getvalue())
 		else:
 			# print("sauce not exists")
-			sg.popup_error("code not found or error occurred")
+			sg.popup_error("Code not found or error occurred")
 
 
 window.close()
