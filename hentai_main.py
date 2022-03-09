@@ -4,6 +4,7 @@ import PySimpleGUI as sg
 import hentai as hn
 import requests
 import datetime
+import base64
 import io
 import os
 
@@ -13,7 +14,8 @@ def sauce_exists(sauce_code):
 		sauce = hn.Hentai(sauce_code)
 		status = hn.Hentai.exists(sauce.id)
 	except Exception as e:
-		print(e)
+		# print(e)
+		print(type(e))
 		return False
 
 	return status
@@ -43,22 +45,36 @@ def sauce_info(sauce_code):
 
 sg.theme("DarkAmber")
 
+# open app cover
+img_cover_app_location = 'res/image/catgirl.png'
+img_cover = Image.open(img_cover_app_location)
+img_cover.thumbnail((500,500)) 
+cover = io.BytesIO()
+img_cover.save(cover, format="PNG")
+
 # layout interface of the main window
-layout = [
+layout_left = [
 	[sg.Text('Sauce	'), sg.InputText(key='-CODE-'), sg.Button('Go')],
-	[sg.Text('Title 	: ', key='-TXT_TITLE-')],
-	[sg.Text('Artist 	: ', key='-TXT_ARTIST-')],
-	[sg.Text('Page(s) 	:', key='-TXT_PAGES-')],
-	[sg.Text('Uploaded : ', key='-TXT_UPLOAD-')],
+	[sg.Text('Title 	:   -', key='-TXT_TITLE-')],
+	[sg.Text('Artist 	:   -', key='-TXT_ARTIST-')],
+	[sg.Text('Page(s) 	:   -', key='-TXT_PAGES-')],
+	[sg.Text('Uploaded :   -', key='-TXT_UPLOAD-')],
 	[sg.Text('Tags	:'), sg.Multiline(size=(47, 5), disabled=True, key='-TXT_TAGS-')],
 
 	# Image viewer & 2 button for navigation
-	[sg.Column([[sg.Image(key="-IMAGE-")]], justification='center')],
+	# [sg.Column([[sg.Image(key="-IMAGE-")]], justification='right')],
 	# [sg.Column([[sg.Button('< Prev', visible=True, key='prev'), sg.Button('Next >', visible=True, key='next')]],justification='center')],
 ]
 
+layout_right = [
+	# [sg.Text(key='-IMG_TITLE-')],
+	[sg.Image(cover.getvalue(), key="-IMAGE-")]
+]
+
+layout = [[sg.Column(layout_left), sg.VSeparator(), sg.Column(layout_right, element_justification='c')]]
+
 # show window application
-window = sg.Window('NH Sneak Peek', layout)
+window = sg.Window('NH Sneak Peek', layout, size=(958,559))
 
 # looping. Here the logic of the program run
 while True:
@@ -66,6 +82,7 @@ while True:
 	images_urls = None
 
 	event, values = window.read()
+
 	if event == sg.WIN_CLOSED or event == 'Cancel':
 		break
 	
@@ -102,6 +119,7 @@ while True:
 				window['-TXT_TAGS-'].update(tags)
 				
 
+				# window['-IMG_TITLE-'].update(title)
 				# showing the first image of the manga
 				im = Image.open(requests.get(images_urls[0], stream=True).raw)
 				im.thumbnail((500,500))
