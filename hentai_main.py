@@ -45,13 +45,12 @@ sg.theme("DarkAmber")
 
 # layout interface of the main window
 layout = [
-	[sg.Text('Sauce'), sg.InputText(key='-CODE-'), sg.Button('Go')],
-	[sg.Text('Title : ', key='-TXT_TITLE-')],
-	[sg.Text('Artist : ', key='-TXT_ARTIST-')],
+	[sg.Text('Sauce	'), sg.InputText(key='-CODE-'), sg.Button('Go')],
+	[sg.Text('Title 	: ', key='-TXT_TITLE-')],
+	[sg.Text('Artist 	: ', key='-TXT_ARTIST-')],
+	[sg.Text('Page(s) 	:', key='-TXT_PAGES-')],
 	[sg.Text('Uploaded : ', key='-TXT_UPLOAD-')],
-	[sg.Text('Page(s) :', key='-TXT_PAGES-')],
-	[sg.Text('Tags : ')],
-	[sg.Multiline(size=(55, 5), disabled=True, key='-TXT_TAGS-')],
+	[sg.Text('Tags	:'), sg.Multiline(size=(47, 5), disabled=True, key='-TXT_TAGS-')],
 
 	# Image viewer & 2 button for navigation
 	[sg.Column([[sg.Image(key="-IMAGE-")]], justification='center')],
@@ -90,21 +89,22 @@ while True:
 
 				# modif title text, if too long cut it so the main window not expanding
 				if len(title_pretty) > 65:
-					window['-TXT_TITLE-'].update('Title : {0}'.format(title_pretty[0:65]))
+					window['-TXT_TITLE-'].update('Title 	:   {0}'.format(title_pretty[0:65]))
 					window['-TXT_TITLE-'].set_tooltip(title)
 				else:
-					window['-TXT_TITLE-'].update('Title : {0}'.format(title_pretty))
+					window['-TXT_TITLE-'].update('Title 	:   {0}'.format(title_pretty))
 					window['-TXT_TITLE-'].set_tooltip(title)
 
-				window['-TXT_ARTIST-'].update('Artist : {0}'.format(artist_name))
-				window['-TXT_UPLOAD-'].update('Uploaded : {0}'.format(upload_date))
+				window['-TXT_ARTIST-'].update('Artist 	:   {0}'.format(artist_name))
+				window['-TXT_PAGES-'].update('Page(s) 	:   {0}'.format(len(images_urls)))
+				window['-TXT_UPLOAD-'].update('Uploaded :   {0}'.format(upload_date))
 				tags = ', '.join(map(str, tags))
 				window['-TXT_TAGS-'].update(tags)
-				window['-TXT_PAGES-'].update('Page(s) : {0}'.format(len(images_urls)))
+				
 
 				# showing the first image of the manga
 				im = Image.open(requests.get(images_urls[0], stream=True).raw)
-				im.thumbnail((600,600))
+				im.thumbnail((200,200))
 				bio = io.BytesIO()
 				im.save(bio, format="PNG") # convert to PNG, somehow the element (image viewer element) not support JPG format
 				window['-IMAGE-'].update(bio.getvalue())
