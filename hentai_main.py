@@ -1,4 +1,5 @@
 from PIL import Image
+import concurrent.futures
 import PySimpleGUI as sg
 import hentai as hn
 import requests
@@ -52,34 +53,44 @@ layout = [
 window = sg.Window('Nuke Code Sneak Peek', layout)
 
 while True:
+	sauce_is_exists = False
 	event, values = window.read()
 	if event == sg.WIN_CLOSED or event == 'Cancel':
 		break
 	
 	if event == 'Go':
+		with concurrent.futures.ThreadPoolExecutor() as executor:
+			future = executor.submit(sauce_exists, values['-CODE-'])
+			sauce_is_exists = future.result()
+			# print(sauce_is_exists)	
+
 		if values['-CODE-'] == "":
 			sg.popup_error("please provide the nuke code")
-		elif sauce_exists(values['-CODE-']):
-			title, title_pretty, artist_name, artist_url, tags, upload_date, images = sauce_info(values['-CODE-'])
-			print(title)
-			print(title_pretty)
-			print(upload_date)
-			print(artist_name)
-			print(tags)
+		elif sauce_is_exists:
+			with concurrent.futures.ThreadPoolExecutor() as executor:
+				future = executor.submit(sauce_info, values['-CODE-'])
+				return_value = future.result()
 
-			# modif title text, if too long cut it so the main window not expanding
-			if len(title_pretty) > 65:
-				window['-TX_TITLE-'].update('Title: {0}'.format(title_pretty[0:65]))
-				window['-TX_TITLE-'].set_tooltip(title)
-			else:
-				window['-TX_TITLE-'].update('Title: {0}'.format(title_pretty))
-				window['-TX_TITLE-'].set_tooltip(title)
+				title, title_pretty, artist_name, artist_url, tags, upload_date, images = sauce_info(values['-CODE-'])
+				# print(title)
+				# print(title_pretty)
+				# print(upload_date)
+				# print(artist_name)
+				# print(tags)
+
+				# modif title text, if too long cut it so the main window not expanding
+				if len(title_pretty) > 65:
+					window['-TX_TITLE-'].update('Title: {0}'.format(title_pretty[0:65]))
+					window['-TX_TITLE-'].set_tooltip(title)
+				else:
+					window['-TX_TITLE-'].update('Title: {0}'.format(title_pretty))
+					window['-TX_TITLE-'].set_tooltip(title)
 
 
-			window['-TX_ARTIST-'].update('Artist: {0}'.format(artist_name))
-			window['-TX_UPLOAD-'].update('Uploaded: {0}'.format(upload_date))
-			tags = ', '.join(map(str, tags))
-			window['-TX_TAGS-'].update(tags)
+				window['-TX_ARTIST-'].update('Artist: {0}'.format(artist_name))
+				window['-TX_UPLOAD-'].update('Uploaded: {0}'.format(upload_date))
+				tags = ', '.join(map(str, tags))
+				window['-TX_TAGS-'].update(tags)
 		else:
 			# print("sauce not exists")
 			sg.popup_error("code not found or error occurred")
