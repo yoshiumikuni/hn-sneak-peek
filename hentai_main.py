@@ -9,6 +9,13 @@ import io
 import os
 
 
+def convert_image_to_png(image_source, size=(500,500)):
+	img = Image.open(image_source)
+	img.thumbnail(size)
+	img_byte = io.BytesIO()
+	img.save(img_byte, format='PNG')
+	return img_byte.getvalue()
+
 def sauce_exists(sauce_code):	
 	try:
 		sauce = hn.Hentai(sauce_code)
@@ -17,7 +24,6 @@ def sauce_exists(sauce_code):
 		# print(e)
 		print(type(e))
 		return False
-
 	return status
 
 def sauce_info(sauce_code):
@@ -37,20 +43,12 @@ def sauce_info(sauce_code):
 
 	return sauce_title, sauce_title_pretty, sauce_artist_name, sauce_artist_url, sauce_tag, sauce_uploaddate, sauce_url_images
 
-# add image viewer navigation function that working with button.
-# def image_viewer(url_in_list, nav_code):
-
-
 
 
 sg.theme("DarkAmber")
 
 # open app cover
-img_cover_app_location = 'res/image/catgirl.png'
-img_cover = Image.open(img_cover_app_location)
-img_cover.thumbnail((500,500)) 
-cover = io.BytesIO()
-img_cover.save(cover, format="PNG")
+cover = convert_image_to_png('res/image/catgirl.png')
 
 # layout interface of the main window
 layout_left = [
@@ -60,15 +58,11 @@ layout_left = [
 	[sg.Text('Page(s) 	:   -', key='-TXT_PAGES-')],
 	[sg.Text('Uploaded :   -', key='-TXT_UPLOAD-')],
 	[sg.Text('Tags	:'), sg.Multiline(size=(47, 5), disabled=True, key='-TXT_TAGS-')],
-
-	# Image viewer & 2 button for navigation
-	# [sg.Column([[sg.Image(key="-IMAGE-")]], justification='right')],
-	# [sg.Column([[sg.Button('< Prev', visible=True, key='prev'), sg.Button('Next >', visible=True, key='next')]],justification='center')],
 ]
 
 layout_right = [
 	# [sg.Text(key='-IMG_TITLE-')],
-	[sg.Image(cover.getvalue(), key="-IMAGE-")]
+	[sg.Image(cover, key="-IMAGE-")]
 ]
 
 layout = [[sg.Column(layout_left), sg.VSeparator(), sg.Column(layout_right, element_justification='c')]]
@@ -118,20 +112,11 @@ while True:
 				tags = ', '.join(map(str, tags))
 				window['-TXT_TAGS-'].update(tags)
 				
-
-				# window['-IMG_TITLE-'].update(title)
 				# showing the first image of the manga
-				im = Image.open(requests.get(images_urls[0], stream=True).raw)
-				im.thumbnail((500,500))
-				bio = io.BytesIO()
-				im.save(bio, format="PNG") # convert to PNG, somehow the element (image viewer element) not support JPG format
-				window['-IMAGE-'].update(bio.getvalue())
-
-				# window['next'].update(visible=True)
-				# window['prev'].update(visible=True)
+				img_doujin = convert_image_to_png(requests.get(images_urls[0], stream=True).raw, size=(500,500))
+				window['-IMAGE-'].update(img_doujin)
 		else:
 			sg.popup_error("Code not found or error occurred")
-
 
 # terminate program
 window.close()
