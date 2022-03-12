@@ -26,9 +26,10 @@ def sauce_exists(sauce_code):
 		return False
 	return status
 
-def sauce_get_cover(sauce_code):
-	doujin = hn.Hentai(sauce_code)
-	return doujin.image_urls[0]
+def sauce_get_cover(image_url_or_link):
+	get_image = requests.get(image_url_or_link, stream=True).raw
+	convert_image = convert_image_to_png(get_image)
+	return convert_image
 
 def sauce_info(sauce_code):
 	doujin = hn.Hentai(sauce_code)
@@ -75,11 +76,11 @@ layout_main = [
 window = sg.Window('NH Sneak Peek', layout_main)
 
 
+sauce_is_exists = False
+images_urls = None
+
 # looping. Here the logic of the program run
 while True:
-	sauce_is_exists = False
-	images_urls = None
-
 	event, values = window.read()
 
 	if event == sg.WIN_CLOSED or event == 'Cancel':
@@ -121,11 +122,16 @@ while True:
 			sg.popup_error("Code not found or error occurred", title='Error')
 	
 	if event == 'view_btn':
-		img = sauce_get_cover(values['-CODE-'])
-		sg.popup_no_buttons('', title='Cover View', 
-			keep_on_top=False, 
-			image=convert_image_to_png(requests.get(img, stream=True).raw))
-
+		# img = sauce_get_cover(values['-CODE-'])
+		# sg.popup_no_buttons('', title='Cover View', 
+		# 	keep_on_top=False, 
+		# 	image=convert_image_to_png(requests.get(img, stream=True).raw))
+		with concurrent.futures.ThreadPoolExecutor() as executor:
+			img = executor.submit(sauce_get_cover, images_urls[0])
+		sg.popup_no_buttons('',
+			title='Cover View',
+			keep_on_top=False,
+			image=img.result())
 
 # terminate program
 window.close()
