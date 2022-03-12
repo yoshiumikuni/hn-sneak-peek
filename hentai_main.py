@@ -22,9 +22,13 @@ def sauce_exists(sauce_code):
 		status = hn.Hentai.exists(sauce.id)
 	except Exception as e:
 		# print(e)
-		print(type(e))
+		# print(type(e))
 		return False
 	return status
+
+def sauce_get_cover(sauce_code):
+	doujin = hn.Hentai(sauce_code)
+	return doujin.image_urls[0]
 
 def sauce_info(sauce_code):
 	doujin = hn.Hentai(sauce_code)
@@ -47,28 +51,29 @@ def sauce_info(sauce_code):
 
 sg.theme("DarkAmber")
 
-# open app cover
-cover = convert_image_to_png('res/image/catgirl.png')
+layout_main_top = [
+	[sg.Text('Sauce	'), sg.InputText(key='-CODE-'), sg.Button('Go')],
+	[sg.Text('Title 	:   -', key='title_txt')],
+	[sg.Text('Artist 	:   -', key='artist_txt')],
+	[sg.Text('Page(s) 	:   -', key='page_txt')],
+	[sg.Text('Uploaded :   -', key='uploaddate_txt')],
+	[sg.Text('Tags	:'), sg.Multiline(size=(47, 5), disabled=True, key='tags_txt')],
+]
+
+layout_main_bottom = [
+	[sg.Button('Download', disabled=True), sg.Button('View Cover', disabled=True, key='view_btn')],
+]
 
 # layout interface of the main window
-layout_left = [
-	[sg.Text('Sauce	'), sg.InputText(key='-CODE-'), sg.Button('Go')],
-	[sg.Text('Title 	:   -', key='-TXT_TITLE-')],
-	[sg.Text('Artist 	:   -', key='-TXT_ARTIST-')],
-	[sg.Text('Page(s) 	:   -', key='-TXT_PAGES-')],
-	[sg.Text('Uploaded :   -', key='-TXT_UPLOAD-')],
-	[sg.Text('Tags	:'), sg.Multiline(size=(47, 5), disabled=True, key='-TXT_TAGS-')],
+layout_main = [
+	[sg.Column(layout_main_top)],
+	[sg.HSeparator()],
+	[sg.Column(layout_main_bottom, justification='right')]
 ]
-
-layout_right = [
-	# [sg.Text(key='-IMG_TITLE-')],
-	[sg.Image(cover, key="-IMAGE-")]
-]
-
-layout = [[sg.Column(layout_left), sg.VSeparator(), sg.Column(layout_right, element_justification='c')]]
 
 # show window application
-window = sg.Window('NH Sneak Peek', layout, size=(958,530))
+window = sg.Window('NH Sneak Peek', layout_main)
+
 
 # looping. Here the logic of the program run
 while True:
@@ -88,35 +93,39 @@ while True:
 			sauce_is_exists = future.result() # returning True or False
 
 		if values['-CODE-'] == "":
-			sg.popup_error("Please provide the nuke code")
+			sg.popup_error("Please provide the nuke code", title='Error')
 
 		# if the nuke code found (exists)
 		elif sauce_is_exists:
 			# accessing API
-			with concurrent.futures.ThreadPoolExecutor() as executor:
+			with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
 				future = executor.submit(sauce_info, values['-CODE-'])
 				return_value = future.result()
 				title, title_pretty, artist_name, artist_url, tags, upload_date, images_urls = return_value
 
 				# modif title text, if too long cut it so the main window not expanding
-				if len(title_pretty) > 65:
-					window['-TXT_TITLE-'].update('Title 	:   {0}'.format(title_pretty[0:65]))
-					window['-TXT_TITLE-'].set_tooltip(title)
+				if len(title) >= 55:
+					window['title_txt'].update('Title 	:   {0}...'.format(title[0:55]))
+					window['title_txt'].set_tooltip(title)
 				else:
-					window['-TXT_TITLE-'].update('Title 	:   {0}'.format(title_pretty))
-					window['-TXT_TITLE-'].set_tooltip(title)
+					window['title_txt'].update('Title 	:   {0}'.format(title))
+					# window['title_txt'].set_tooltip(title)
 
-				window['-TXT_ARTIST-'].update('Artist 	:   {0}'.format(artist_name))
-				window['-TXT_PAGES-'].update('Page(s) 	:   {0}'.format(len(images_urls)))
-				window['-TXT_UPLOAD-'].update('Uploaded :   {0}'.format(upload_date))
+				window['artist_txt'].update('Artist 	:   {0}'.format(artist_name))
+				window['page_txt'].update('Page(s) 	:   {0}'.format(len(images_urls)))
+				window['uploaddate_txt'].update('Uploaded :   {0}'.format(upload_date))
 				tags = ', '.join(map(str, tags))
-				window['-TXT_TAGS-'].update(tags)
-				
-				# showing the first image of the manga
-				img_doujin = convert_image_to_png(requests.get(images_urls[0], stream=True).raw, size=(500,500))
-				window['-IMAGE-'].update(img_doujin)
+				window['tags_txt'].update(tags)
+				window['view_btn'].update(disabled=False)
 		else:
-			sg.popup_error("Code not found or error occurred")
+			sg.popup_error("Code not found or error occurred", title='Error')
+	
+	if event == 'view_btn':
+		img = sauce_get_cover(values['-CODE-'])
+		sg.popup_no_buttons('', title='Cover View', 
+			keep_on_top=False, 
+			image=convert_image_to_png(requests.get(img, stream=True).raw))
+
 
 # terminate program
 window.close()
