@@ -1,13 +1,31 @@
 from PIL import Image
+from tqdm import tqdm
 import concurrent.futures
 import PySimpleGUI as sg
 import hentai as hn
+import urllib.parse
 import requests
 import datetime
 import base64
 import io
 import os
 
+def split_list(a_list, wanted_parts=1):
+	length = len(a_list)
+	return [a_list[i*length // wanted_parts: (i+1)*length // wanted_parts]
+		for i in range(wanted_parts)]
+
+def download_images(list_of_urls, save_path):
+	length_list = len(list_of_urls)
+	for i in tqdm(range(length_list)):
+		response = requests.get(list_of_urls[i], stream=True)
+		filename = list_of_urls[i].rsplit('/',1)[-1] # get path after the lash slash (/) of url
+		# https://example.com/.../.../file.txt -> output: file.txt
+
+		save_path = urllib.parse.urljoin(save_path, filename)
+		with open(save_path, 'wb') as file:
+			for data in response.iter_content(1024):
+				file.write(data) # write file to local machine
 
 def convert_image_to_png(image_source, size=(500,500)):
 	img = Image.open(image_source)
@@ -60,7 +78,7 @@ layout_main_top = [
 ]
 
 layout_main_bottom = [
-	[sg.Button('Download', disabled=True), sg.Button('View Cover', disabled=True, key='view_btn')],
+	[sg.Button('Download', disabled=True, key='download_btn'), sg.Button('View Cover', disabled=True, key='view_btn')],
 ]
 
 # layout interface of the main window
@@ -117,8 +135,9 @@ while True:
 				tags = ', '.join(map(str, tags))
 				window['tags_txt'].update(tags)
 
-				# enable view cover button
+				# enable view cover & download button
 				window['view_btn'].update(disabled=False)
+				window['download_btn'].update(disabled=False)
 		else:
 			sg.popup_error("Code not found or error occurred", title='Error')
 	
@@ -126,6 +145,18 @@ while True:
 		with concurrent.futures.ThreadPoolExecutor() as executor:
 			# show hentai cover in default user image viewer
 			img = executor.submit(sauce_show_cover, images_urls[0])
+
+	if event == 'download_btn':
+		url_list = split_list(images_urls, os.cpu_count()) # spliting long list into current user CPU cores
+		# example: current user processor core is 4, so long list splited into 4
+
+		path = values['-CODE-'] + '/' # adding '/' so images saved into path folder, not current folder
+		os.makedirs(path, exist_ok=True)
+
+		with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+			for i in range(os.cpu_count()):
+				executor.submit(download_images, url_list[i], path)
+
 
 # terminate program
 window.close()

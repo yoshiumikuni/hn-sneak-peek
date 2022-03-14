@@ -1,49 +1,47 @@
-# from tqdm import tqdm
-# from time import sleep
-# import concurrent.futures
-
-# def count(range_count):
-# 	for i in tqdm(range(int(range_count))):
-# 		pass
-
-# def main():
-# 	with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-# 		executor.submit(count, 300000)
-# 		executor.submit(count, 500000)
-# 		executor.submit(count, 9000000)
-# 		executor.submit(count, 1000000)
-
-# if __name__ == '__main__':
-# 	main()
-
-# def split_list(a_list, wanted_parts=1):
-# 	length = len(a_list)
-# 	return [a_list[i*length // wanted_parts: (i+1)*length // wanted_parts]
-# 		for i in range(wanted_parts)]
-
-# lst = []
-# for i in range(11):
-# 	lst.append(i)
-
-# for i in split_list(lst, 4):
-# 	for j in i:
-# 		print(j)
-# 	print('---')
-
 from tqdm import tqdm
+import os
 import requests
+import concurrent.futures
+import urllib.parse
 
-url = "https://raw.githubusercontent.com/yoshiumikuni/hn-sneak-peek/main/res/image/catgirl.png" #big file test
-# Streaming, so we can iterate over the response.
-response = requests.get(url, stream=True)
-print(response.raw)
-# total_size_in_bytes= int(response.headers.get('content-length', 0))
-# block_size = 1024 #1 Kibibyte
-# progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-# with open('test.dat', 'wb') as file:
-#     for data in response.iter_content(block_size):
-#         progress_bar.update(len(data))
-#         file.write(data)
-# progress_bar.close()
-# if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-#     print("ERROR, something went wrong")
+def split_list(a_list, wanted_parts=1):
+	length = len(a_list)
+	return [a_list[i*length // wanted_parts: (i+1)*length // wanted_parts]
+		for i in range(wanted_parts)]
+
+def download_image(list_of_urls, save_path):
+	length_list = len(list_of_urls)
+	for i in tqdm(range(length_list)):
+		response = requests.get(list_of_urls[i], stream=True)
+		filename = list_of_urls[i].rsplit('/',1)[-1]
+		save_path = urllib.parse.urljoin(save_path, filename)
+		with open(save_path, 'wb') as file:
+			for data in response.iter_content(1024):
+				file.write(data)
+
+url_list = [
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-black-000.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-blue-00f.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-cyan-0ff.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-gray-7f7f7f.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-green-0f0.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-purple-f0f.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-red-f00.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-white-fff.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/cs-yellow-ff0.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/ia-forrest.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/ia-installing.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/pg-coral.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/pg-couplevn.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/web-booking.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/web-braverangels.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/web-jakearchibald.png',
+	'https://raw.githubusercontent.com/test-images/png/main/202105/web-surma.png'	
+]
+
+path = '177013/'
+os.makedirs(path, exist_ok=True)
+url_list = split_list(url_list, os.cpu_count())
+with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+	for i in range(os.cpu_count()):
+		executor.submit(download_image, url_list[i], path)
