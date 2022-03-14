@@ -21,15 +21,13 @@ def sauce_exists(sauce_code):
 		sauce = hn.Hentai(sauce_code)
 		status = hn.Hentai.exists(sauce.id)
 	except Exception as e:
-		# print(e)
-		# print(type(e))
 		return False
 	return status
 
-def sauce_get_cover(image_url_or_link):
+def sauce_show_cover(image_url_or_link):
 	get_image = requests.get(image_url_or_link, stream=True).raw
-	convert_image = convert_image_to_png(get_image)
-	return convert_image
+	img = Image.open(get_image)
+	img.show()
 
 def sauce_info(sauce_code):
 	doujin = hn.Hentai(sauce_code)
@@ -112,26 +110,22 @@ while True:
 					window['title_txt'].update('Title 	:   {0}'.format(title))
 					# window['title_txt'].set_tooltip(title)
 
+				# update value of artist, total hentai pages, upload date
 				window['artist_txt'].update('Artist 	:   {0}'.format(artist_name))
 				window['page_txt'].update('Page(s) 	:   {0}'.format(len(images_urls)))
 				window['uploaddate_txt'].update('Uploaded :   {0}'.format(upload_date))
 				tags = ', '.join(map(str, tags))
 				window['tags_txt'].update(tags)
+
+				# enable view cover button
 				window['view_btn'].update(disabled=False)
 		else:
 			sg.popup_error("Code not found or error occurred", title='Error')
 	
 	if event == 'view_btn':
-		# img = sauce_get_cover(values['-CODE-'])
-		# sg.popup_no_buttons('', title='Cover View', 
-		# 	keep_on_top=False, 
-		# 	image=convert_image_to_png(requests.get(img, stream=True).raw))
 		with concurrent.futures.ThreadPoolExecutor() as executor:
-			img = executor.submit(sauce_get_cover, images_urls[0])
-		sg.popup_no_buttons('',
-			title='Cover View',
-			keep_on_top=False,
-			image=img.result())
+			# show hentai cover in default user image viewer
+			img = executor.submit(sauce_show_cover, images_urls[0])
 
 # terminate program
 window.close()
