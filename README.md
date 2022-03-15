@@ -5,7 +5,7 @@ A small program that can preview a nuke code title, author/artist, tags, cover o
 Simple, provide a nuke code you got form 9Gag, Reddit, or Twitter (or some of your firends that give it to you). Then, put it on textbox after that Click 'Go' and wait.
 
 - 'View Cover' to see the manga cover.
-- 'Download' to download the manga (you can see download progress in console).
+- 'Download' to download the manga (you can see download progress on window title bar).
 
 # Library
 Library that I'm using for this project is from https://github.com/hentai-chan/hentai. Go check that out!
