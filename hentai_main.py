@@ -35,6 +35,7 @@ def sauce_is_exists(sauce_code):
 		sauce = hn.Hentai(sauce_code)
 		is_exists = hn.Hentai.exists(sauce.id)
 	except Exception as e:
+		print(e)
 		return False
 	else:
 		return True
@@ -95,6 +96,7 @@ def main():
 		if event == 'go_btn':
 			window['go_btn'].update(disabled=True)
 			window.set_title('NH Sneak Peek - Getting sauce info... please wait...')
+
 			window.perform_long_operation(lambda: sauce_is_exists(values['-CODE-']), 'get_sauce_is_exists_complete')
 
 		elif event == 'view_btn':
@@ -102,6 +104,7 @@ def main():
 			window['download_btn'].update(disabled=True)
 			window['go_btn'].update(disabled=True)
 			window.set_title('NH Sneak Peek - Getting image cover... please wait...')
+
 			window.perform_long_operation(lambda: show_sauce_cover(image_urls[0]), 'get_sauce_cover_complete')
 
 		elif event == 'download_btn':
@@ -111,6 +114,7 @@ def main():
 
 			save_location = values['-CODE-'] + '/'
 			os.makedirs(save_location, exist_ok=True)
+
 			window.perform_long_operation(lambda: download_images(image_urls, save_location, window), 'download_images_complete')
 
 		if event == 'get_sauce_is_exists_complete':
@@ -118,6 +122,7 @@ def main():
 				window.perform_long_operation(lambda: get_sauce_info(values['-CODE-']), 'get_sauce_info_complete')
 			else:
 				sg.popup_error('Nuke code not found!', title='Error')
+				
 				window['go_btn'].update(disabled=False)
 				window.set_title('NH Sneak Peek')
 
@@ -130,6 +135,7 @@ def main():
 		elif event == 'get_sauce_info_complete':
 			window.set_title('NH Sneak Peek - Viewing {}'.format(values['-CODE-']))
 			window['go_btn'].update(disabled=False)
+			
 			sauce_info = values['get_sauce_info_complete']
 			
 			if len(sauce_info[0]) >= 55:
@@ -150,16 +156,20 @@ def main():
 			
 		elif event == 'get_sauce_cover_complete':
 			window.set_title('NH Sneak Peek - Viewing {}'.format(values['-CODE-']))
+			
 			window['view_btn'].update(disabled=False)
 			window['download_btn'].update(disabled=False)
 			window['go_btn'].update(disabled=False)
 
 		elif event == 'download_images_complete':
 			sg.popup_ok('Download Complete!')
+
+			window.set_title('NH Sneak Peek - Viewing {}'.format(values['-CODE-']))
+
 			window['view_btn'].update(disabled=False)
 			window['download_btn'].update(disabled=False)
 			window['go_btn'].update(disabled=False)
-			window.set_title('NH Sneak Peek - Viewing {}'.format(values['-CODE-']))
+			
 
 if __name__ == '__main__':
 	main()
