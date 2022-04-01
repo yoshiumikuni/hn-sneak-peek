@@ -35,8 +35,11 @@ def sauce_is_exists(sauce_code):
 		sauce = hn.Hentai(sauce_code)
 		is_exists = hn.Hentai.exists(sauce.id)
 	except Exception as e:
-		print(e)
-		return False
+		if "HTTPSConnectionPool" in str(e):
+			print("VPN Needed!")
+			return "Error-VPN"
+		else:
+			return False
 	else:
 		return True
 
@@ -121,7 +124,10 @@ def main():
 			if values['get_sauce_is_exists_complete'] == True:
 				window.perform_long_operation(lambda: get_sauce_info(values['-CODE-']), 'get_sauce_info_complete')
 			else:
-				sg.popup_error('Nuke code not found!', title='Error')
+				if values['get_sauce_is_exists_complete'] == 'Error-VPN':
+					sg.popup_error('Conection blocked by ISP. Pelase use VPN!', title='Need VPN Connection')
+				else:
+					sg.popup_error('Nuke code not found!', title='Error')
 				
 				window['go_btn'].update(disabled=False)
 				window.set_title('NH Sneak Peek')
